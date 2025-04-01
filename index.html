@@ -2,18 +2,62 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AR.js 多標記 GLB 測試</title>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.min.js"></script>
 </head>
 <body style="margin: 0; overflow: hidden;">
-    <a-scene embedded arjs="sourceType: webcam;" vr-mode-ui="enabled: false">
-        <!-- 標記 -->
+    <a-scene embedded arjs>
+        <!-- 第一個標記 -->
         <a-marker type="pattern" url="/static/pattern-1.patt">
             <a-entity 
                 gltf-model="https://dctdb.github.io/dctdb/concrete_default.glb"
-                scale="2.5 2.5 2.5"  
+                scale="2 2 2"  
+                position="0 0 0"
+                rotation="0 180 0"
+                gesture-handler>
+            </a-entity>
+        </a-marker>
+
+        <!-- 第二個標記 -->
+        <a-marker type="pattern" url="/static/pattern-2.patt">
+            <a-entity 
+                gltf-model="https://dctdb.github.io/dctdb/grass_default.glb"
+                scale="2 2 2"  
+                position="0 0 0"
+                rotation="0 180 0"
+                gesture-handler>
+            </a-entity>
+        </a-marker>
+
+        <!-- 第三個標記 -->
+        <a-marker type="pattern" url="/static/pattern-3.patt">
+            <a-entity 
+                gltf-model="https://dctdb.github.io/dctdb/ice_default.glb"
+                scale="2 2 2"  
+                position="0 0 0"
+                rotation="0 180 0"
+                gesture-handler>
+            </a-entity>
+        </a-marker>
+
+        <!-- 第四個標記 -->
+        <a-marker type="pattern" url="/static/pattern-4.patt">
+            <a-entity 
+                gltf-model="https://dctdb.github.io/dctdb/lava_default.glb"
+                scale="2 2 2"  
+                position="0 0 0"
+                rotation="0 180 0"
+                gesture-handler>
+            </a-entity>
+        </a-marker>
+
+        <!-- 第五個標記 -->
+        <a-marker type="pattern" url="/static/pattern-5.patt">
+            <a-entity 
+                gltf-model="https://dctdb.github.io/dctdb/desert_default.glb"
+                scale="2 2 2"  
                 position="0 0 0"
                 rotation="0 180 0"
                 gesture-handler>
@@ -26,14 +70,18 @@
     <script>
         AFRAME.registerComponent('gesture-handler', {
             init: function () {
-                this.previousX = null;
-                this.previousY = null;
+                this.previousX = null;  
+                this.previousY = null;  
                 this.previousDistance = null;
-                this.el.sceneEl.addEventListener('touchmove', this.onTouchMove.bind(this), { passive: false });
+                this.el.sceneEl.addEventListener('touchmove', this.onTouchMove.bind(this));
                 this.el.sceneEl.addEventListener('touchstart', this.onTouchStart.bind(this));
                 this.el.sceneEl.addEventListener('touchend', this.onTouchEnd.bind(this));
+                this.el.sceneEl.addEventListener('mousemove', this.onMouseMove.bind(this));
+                this.el.sceneEl.addEventListener('mousedown', this.onMouseDown.bind(this));
+                this.el.sceneEl.addEventListener('mouseup', this.onMouseUp.bind(this));
+                this.el.sceneEl.addEventListener('wheel', this.onMouseWheel.bind(this));
             },
-
+            
             onTouchStart: function (event) {
                 if (event.touches.length === 1) {
                     this.previousX = event.touches[0].clientX;
@@ -44,10 +92,9 @@
             },
 
             onTouchMove: function (event) {
-                event.preventDefault();
-                if (event.touches.length === 1) {
+                if (event.touches.length === 1) {  
                     this.handleRotation(event.touches[0].clientX, event.touches[0].clientY);
-                } else if (event.touches.length === 2) {
+                } else if (event.touches.length === 2) {  
                     let currentDistance = this.getDistance(event.touches);
                     this.handleScaling(currentDistance);
                 }
@@ -57,6 +104,36 @@
                 this.previousX = null;
                 this.previousY = null;
                 this.previousDistance = null;
+            },
+
+            onMouseDown: function (event) {
+                if (event.buttons === 1) {  
+                    this.previousX = event.clientX;
+                    this.previousY = event.clientY;
+                }
+            },
+
+            onMouseMove: function (event) {
+                if (event.buttons === 1) { 
+                    this.handleRotation(event.clientX, event.clientY);
+                }
+            },
+
+            onMouseUp: function () {
+                this.previousX = null;
+                this.previousY = null;
+            },
+
+            onMouseWheel: function (event) {
+                let model = this.el;
+                let scale = model.getAttribute('scale');
+                let factor = event.deltaY > 0 ? 0.9 : 1.1; 
+                let newScale = {
+                    x: Math.max(0.5, Math.min(5, scale.x * factor)),
+                    y: Math.max(0.5, Math.min(5, scale.y * factor)),
+                    z: Math.max(0.5, Math.min(5, scale.z * factor))
+                };
+                model.setAttribute('scale', newScale);
             },
 
             handleRotation: function (currentX, currentY) {
@@ -88,9 +165,9 @@
                     let scale = model.getAttribute('scale');
                     let factor = currentDistance / this.previousDistance;
                     let newScale = {
-                        x: Math.max(1.5, Math.min(4, scale.x * factor)),
-                        y: Math.max(1.5, Math.min(4, scale.y * factor)),
-                        z: Math.max(1.5, Math.min(4, scale.z * factor))
+                        x: Math.max(1, Math.min(4, scale.x * factor)),
+                        y: Math.max(1, Math.min(4, scale.y * factor)),
+                        z: Math.max(1, Math.min(4, scale.z * factor))
                     };
                     model.setAttribute('scale', newScale);
                 }
